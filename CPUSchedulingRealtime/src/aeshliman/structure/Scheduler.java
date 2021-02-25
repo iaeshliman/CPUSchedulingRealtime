@@ -65,6 +65,7 @@ public class Scheduler
 	{
 		for(CustomProcess process : queue)
 		{
+			if(!process.getBeenRunning()) process.incrementResponseTime();
 			switch(type)
 			{
 			case CPU:

@@ -31,7 +31,7 @@ public class GUI extends JFrame
 	private boolean step = false;
 	
 	// Constructors
-	public GUI(String title,int w, int h, SimulationAPI api, int fps)
+	public GUI(String title,int w, int h, SimulationAPI api, int fps, String path)
 	{
 		// Initialize instance variables
 		super(title); // Specifies the title of the window
@@ -39,7 +39,7 @@ public class GUI extends JFrame
 		this.fps = fps;
 		
 		// Loads simulation scenario
-		this.api.loadScenario("scenario.dat");
+		this.api.loadScenario(path);
 		
 		// Initialize GUI components
 		this.controlsContainer = new Container();

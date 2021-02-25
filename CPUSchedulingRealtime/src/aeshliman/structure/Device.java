@@ -85,6 +85,7 @@ public class Device
 		switch(type)
 		{
 		case CPU:
+			if(!process.getBeenRunning()) process.triggerBeenRunning();
 			process.setState(State.RUNNING);
 			break;
 		case IO:

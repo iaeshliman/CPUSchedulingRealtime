@@ -16,8 +16,10 @@ public class CustomProcess
 	private int arrivalTime;
 	private int finishTime;
 	private int turnaroundTime;
+	private int responseTime;
 	private int cpuWaitTime;
 	private int ioWaitTime;
+	private boolean beenRunning;
 	
 	// Constructors
 	public CustomProcess(String name, Queue<Burst> bursts, int priority, int arrivalTime)
@@ -30,8 +32,10 @@ public class CustomProcess
 		this.arrivalTime = arrivalTime;
 		this.finishTime = 0;
 		this.turnaroundTime = 0;
+		this.responseTime = 0;
 		this.cpuWaitTime = 0;
 		this.ioWaitTime = 0;
+		this.beenRunning = false;
 	}
 	
 	// Getters and Setters
@@ -45,9 +49,11 @@ public class CustomProcess
 	public int getTurnaroundTime() { return this.turnaroundTime; }
 	public int getCpuWaitTime() { return this.cpuWaitTime; }
 	public int getIoWaitTime() { return this.ioWaitTime; }
+	public boolean getBeenRunning() { return this.beenRunning; }
 	
 	public void setState(State state) { this.state = state; }
 	public void setFinishTime(int finishTime) { this.finishTime = finishTime; }
+	public void triggerBeenRunning() { this.beenRunning = true; }
 	
 	// Operations
 	public boolean tick() // Returns true if burst finished
@@ -92,12 +98,17 @@ public class CustomProcess
 		ioWaitTime++;
 	}
 	
+	public void incrementResponseTime()
+	{
+		responseTime++;
+	}
+	
 	// toString
 	public String toString()
 	{
 		String toString = "Process " + pid + "- Name: " + name + "  Priority: " + priority + "  State: " + state
 				+ "\nArrival Time: " + arrivalTime + "  Finish Time: " + finishTime + "  Turnaround Time: " + turnaroundTime
-				+ "  CPU Wait Time: " + cpuWaitTime + "  IO Wait Time: " + ioWaitTime;
+				+ "  Response Time: " + responseTime + "  CPU Wait Time: " + cpuWaitTime + "  IO Wait Time: " + ioWaitTime;
 		for(Burst burst : bursts) toString += "\n\t" + burst;
 		return toString;
 	}
