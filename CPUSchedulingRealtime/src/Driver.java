@@ -1,22 +1,36 @@
-import javax.swing.SwingUtilities;
-
-import aeshliman.gui.GUI;
-import aeshliman.structure.SimulationAPI;
+import java.awt.EventQueue;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Driver
 {
 	public static void main(String[] args)
 	{
-		SwingUtilities.invokeLater(new Runnable()
+		EventQueue.invokeLater(new Runnable()
 		{
-			private final SimulationAPI API = new SimulationAPI();
-			private final String PATH = "CPUSchedulingRealtime/scenario.dat";
-			private final GUI window = new GUI("CPU Scheduling Simulation",500,500,API,5,PATH);
-			
 			public void run()
 			{
-				window.setVisible(true);
+				try
+				{
+					Window window = new Window(720,405);
+					window.window.setVisible(true);
+					Timer timer = new Timer();
+					timer.scheduleAtFixedRate(new TimerTask()
+					{
+					    public void run()
+					    {
+					    	// TODO: Call API methods to update simulation
+					    	if(window.isRunning()||window.willStep())
+					    	{
+					    		window.tick();
+					    	   	window.toggleStep();
+					    	}
+					    }
+					},1000/5,1000/5);
+					
+				}
+				catch(Exception e) { e.printStackTrace(); }
 			}
-        });
+		});
 	}
 }

@@ -1,5 +1,6 @@
-package aeshliman.structure;
+package aeshliman.simulation;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -16,13 +17,14 @@ public class Scheduler
 	private Algorithm algorithm;
 	private Queue<CustomProcess> queue;
 	private int quantum;
+	private int deviceCount = 0;
 	
 	// Constructors
 	public Scheduler(Simulation sim, DeviceType type, Algorithm algorithm, int quantum)
 	{
 		this.sim = sim;
 		this.type = type;
-		this.device = new Device(sim,type);
+		this.device = new Device(deviceCount++,sim,type);
 		this.algorithm = algorithm;
 		this.queue = new LinkedList<CustomProcess>();
 		this.quantum = quantum;
@@ -30,7 +32,7 @@ public class Scheduler
 	
 	// Getters and Setters
 	public DeviceType getType() { return this.type; }
-	public Device getDevice() { return this.device; }
+	public LinkedList<Device> getDevice() { return new LinkedList<Device>(Arrays.asList(this.device)); }
 	public Algorithm getAlgorithm() { return this.algorithm; }
 	public Queue<CustomProcess> getQueue() { return this.queue; }
 	public int getQuantum() { return this.quantum; }
@@ -40,6 +42,11 @@ public class Scheduler
 	{
 		if(device.isEmpty()) { if(!queue.isEmpty()) device.addProcess(queue.poll()); }
 		else if(algorithm.preempt(device,quantum)) { if(!queue.isEmpty()) device.preempt(queue.poll()); }
+	}
+	
+	public void tickDevice()
+	{
+		device.tick();
 	}
 	
 	public void next()

@@ -2,8 +2,8 @@ package aeshliman.comparators;
 
 import java.util.Comparator;
 
-import aeshliman.structure.Burst;
-import aeshliman.structure.CustomProcess;
+import aeshliman.simulation.Burst;
+import aeshliman.simulation.CustomProcess;
 
 public class SortByTime implements Comparator<CustomProcess>
 {

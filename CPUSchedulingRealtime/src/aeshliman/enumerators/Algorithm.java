@@ -4,8 +4,8 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import aeshliman.structure.CustomProcess;
-import aeshliman.structure.Device;
+import aeshliman.simulation.CustomProcess;
+import aeshliman.simulation.Device;
 
 public enum Algorithm
 {

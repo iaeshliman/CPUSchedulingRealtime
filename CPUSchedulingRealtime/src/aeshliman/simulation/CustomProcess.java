@@ -1,4 +1,4 @@
-package aeshliman.structure;
+package aeshliman.simulation;
 
 import java.util.Queue;
 
@@ -7,7 +7,6 @@ import aeshliman.enumerators.State;
 public class CustomProcess
 {
 	// Instance Variables
-	private static int count = 0;
 	private int pid;
 	private String name;
 	private Queue<Burst> bursts;
@@ -20,11 +19,12 @@ public class CustomProcess
 	private int cpuWaitTime;
 	private int ioWaitTime;
 	private boolean beenRunning;
+	private boolean inIO;
 	
 	// Constructors
-	public CustomProcess(String name, Queue<Burst> bursts, int priority, int arrivalTime)
+	public CustomProcess(int pid, String name, Queue<Burst> bursts, int priority, int arrivalTime)
 	{
-		this.pid = count++;
+		this.pid = pid;
 		this.name = name;
 		this.bursts = bursts;
 		this.state = State.NEW;
@@ -36,6 +36,7 @@ public class CustomProcess
 		this.cpuWaitTime = 0;
 		this.ioWaitTime = 0;
 		this.beenRunning = false;
+		this.inIO = false;
 	}
 	
 	// Getters and Setters
@@ -50,10 +51,12 @@ public class CustomProcess
 	public int getCpuWaitTime() { return this.cpuWaitTime; }
 	public int getIoWaitTime() { return this.ioWaitTime; }
 	public boolean getBeenRunning() { return this.beenRunning; }
+	public boolean isInIO() { return this.inIO; }
 	
 	public void setState(State state) { this.state = state; }
 	public void setFinishTime(int finishTime) { this.finishTime = finishTime; }
 	public void triggerBeenRunning() { this.beenRunning = true; }
+	public void setInIO(boolean inIO) { this.inIO = inIO; }
 	
 	// Operations
 	public boolean tick() // Returns true if burst finished
@@ -106,7 +109,7 @@ public class CustomProcess
 	// toString
 	public String toString()
 	{
-		String toString = "Process " + pid + "- Name: " + name + "  Priority: " + priority + "  State: " + state
+		String toString = "Process " + pid + " - Name: " + name + "  Priority: " + priority + "  State: " + state
 				+ "\nArrival Time: " + arrivalTime + "  Finish Time: " + finishTime + "  Turnaround Time: " + turnaroundTime
 				+ "  Response Time: " + responseTime + "  CPU Wait Time: " + cpuWaitTime + "  IO Wait Time: " + ioWaitTime;
 		for(Burst burst : bursts) toString += "\n\t" + burst;

@@ -1,4 +1,4 @@
-package aeshliman.structure;
+package aeshliman.simulation;
 
 import aeshliman.enumerators.DeviceType;
 

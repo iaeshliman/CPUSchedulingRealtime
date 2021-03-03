@@ -1,4 +1,4 @@
-package aeshliman.structure;
+package aeshliman.simulation;
 
 import aeshliman.enumerators.DeviceType;
 import aeshliman.enumerators.State;
@@ -6,7 +6,6 @@ import aeshliman.enumerators.State;
 public class Device
 {
 	// Instance Variables
-	private static int count = 0;
 	private int id;
 	private Simulation sim;
 	private Scheduler scheduler;
@@ -16,9 +15,9 @@ public class Device
 	private int upTime;
 	
 	// Constructors
-	public Device(Simulation sim, DeviceType type)
+	public Device(int id, Simulation sim, DeviceType type)
 	{
-		this.id = count++;
+		this.id = id;
 		this.sim = sim;
 		this.type = type;
 		this.process = null;
@@ -46,6 +45,7 @@ public class Device
 			upTime++;
 			if(process.tick()) // Checks if process finished a burst
 			{
+				process.setInIO(false);
 				if(!process.hasBurst()) // If process has no more bursts terminate it
 				{ 
 					process.setState(State.TERMINATED);
@@ -90,6 +90,7 @@ public class Device
 			break;
 		case IO:
 			process.setState(State.WAITING);
+			process.setInIO(true);
 			break;
 		}
 		runningTime = 0;
@@ -99,6 +100,7 @@ public class Device
 	{
 		if(this.process!=null)
 		{
+			process.setInIO(false);
 			scheduler.getQueue().add(process);
 			switch(type)
 			{
