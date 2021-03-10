@@ -39,9 +39,12 @@ public class SimulationAPI
 	// Operations
 	public void run()
 	{
+		boolean manual = false;
+		if(JOptionPane.showConfirmDialog(null, "Run in manual mode?",null,JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) manual = true;
 		System.out.println(sim);
 		while(sim.getTerminatedCount()<sim.getProcesses().size())
 		{
+			if(manual) if(JOptionPane.showConfirmDialog(null,"Continue?",null,JOptionPane.OK_OPTION)!=JOptionPane.YES_OPTION) break;
 			sim.tick();
 			System.out.println(sim);
 		}
