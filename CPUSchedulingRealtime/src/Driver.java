@@ -25,8 +25,9 @@ public class Driver
 		else // Console mode
 		{
 			SimulationAPI api = new SimulationAPI();
-			api.run();
-			api.saveLog();
+			try { api.run(); }
+			catch(Exception e) { e.printStackTrace(); }
+			finally { api.saveLog(); }
 		}
 	}
 }
