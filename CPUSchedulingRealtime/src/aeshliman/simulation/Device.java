@@ -57,11 +57,11 @@ public class Device
 					switch(type) // If process has more bursts add it to the correct queue
 					{
 					case CPU:
-						sim.appendLog("Process " + process.getPID() + " added to CPU at " + totalTime);
+						sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + totalTime);
 						sim.getIOScheduler().add(process);
 						break;
 					case IO:
-						sim.appendLog("Process " + process.getPID() + " added to IO at " + totalTime);
+						sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + totalTime);
 						sim.getCPUScheduler().add(process);
 						break;
 					}
@@ -81,12 +81,12 @@ public class Device
 			switch(type) // Updates processes state depending on device type
 			{
 			case CPU:
-				sim.appendLog("Process " + process.getPID() + " added to CPU at " + totalTime);
+				sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + totalTime);
 				process.setState(State.RUNNING);
 				process.setHasRan(true);
 				break;
 			case IO:
-				sim.appendLog("Process " + process.getPID() + " added to IO at " + totalTime);
+				sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + totalTime);
 				process.setState(State.WAITING);
 				break;
 			}
