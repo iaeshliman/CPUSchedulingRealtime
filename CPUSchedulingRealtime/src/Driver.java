@@ -1,36 +1,32 @@
 import java.awt.EventQueue;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Driver
 {
 	public static void main(String[] args)
 	{
-		EventQueue.invokeLater(new Runnable()
+		boolean gui = false;
+		if(gui) // GUI mode
 		{
-			public void run()
+			EventQueue.invokeLater(new Runnable()
 			{
-				try
+				public void run() // TODO: Fix the gui mode as its being a pain
 				{
-					Window window = new Window(720,405);
-					window.window.setVisible(true);
-					Timer timer = new Timer();
-					timer.scheduleAtFixedRate(new TimerTask()
+					try
 					{
-					    public void run()
-					    {
-					    	// TODO: Call API methods to update simulation
-					    	if(window.isRunning()||window.willStep())
-					    	{
-					    		window.tick();
-					    	   	window.toggleStep();
-					    	}
-					    }
-					},1000/5,1000/5);
-					
+						Window window = new Window();
+						window.window.setVisible(true);
+					} catch (Exception e)
+					{
+						e.printStackTrace();
+					}
 				}
-				catch(Exception e) { e.printStackTrace(); }
-			}
-		});
+			});
+		}
+		else // Console mode
+		{
+			SimulationAPI api = new SimulationAPI();
+			api.run();
+			api.saveLog();
+		}
 	}
 }

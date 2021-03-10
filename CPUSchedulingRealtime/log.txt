@@ -1,0 +1,34 @@
+==================================================
+	Log Created - 03-09-2021 21:21:25
+==================================================
+Loaded scenario file scenario.txt
+Process 0 is created at 3
+Process 0 added to CPU queue at 3
+Process 0 added to CPU at 3
+Process 2 is created at 5
+Process 2 added to CPU queue at 5
+Process 0 added to CPU at 8
+Process 0 added to IO queue at 8
+Process 2 added to CPU at 8
+Process 0 added to IO at 8
+Process 1 is created at 10
+Process 1 added to CPU queue at 10
+Process 2 added to CPU at 11
+Process 2 added to IO queue at 11
+Process 1 added to CPU at 11
+Process 0 added to IO at 12
+Process 0 added to CPU queue at 12
+Process 2 added to IO at 12
+Process 1 terminated at 36
+Process 0 added to CPU at 36
+Process 0 added to CPU at 44
+Process 0 added to IO queue at 44
+Process 2 added to IO at 57
+Process 2 added to CPU queue at 57
+Process 0 added to IO at 57
+Process 2 added to CPU at 58
+Process 0 added to IO at 59
+Process 0 added to CPU queue at 59
+Process 2 terminated at 79
+Process 0 added to CPU at 79
+Process 0 terminated at 88

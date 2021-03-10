@@ -1,6 +1,5 @@
 package aeshliman.simulation;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -13,75 +12,106 @@ public class Scheduler
 	// Instance Variables
 	private Simulation sim;
 	private DeviceType type;
-	private Device device;
 	private Algorithm algorithm;
+	private LinkedList<Device> devices;
 	private Queue<CustomProcess> queue;
 	private int quantum;
-	private int deviceCount = 0;
 	
 	// Constructors
-	public Scheduler(Simulation sim, DeviceType type, Algorithm algorithm, int quantum)
+	public Scheduler(Simulation sim, DeviceType type, Algorithm algorithm, int quantum, int deviceCount)
 	{
 		this.sim = sim;
 		this.type = type;
-		this.device = new Device(deviceCount++,sim,type);
 		this.algorithm = algorithm;
-		this.queue = new LinkedList<CustomProcess>();
+		this.devices = new LinkedList<Device>();
+		for(int i=0; i<deviceCount; i++) { this.devices.add(new Device(i,type,sim)); }
+		this.queue = algorithm.getQueue();
 		this.quantum = quantum;
 	}
 	
 	// Getters and Setters
-	public DeviceType getType() { return this.type; }
-	public LinkedList<Device> getDevice() { return new LinkedList<Device>(Arrays.asList(this.device)); }
-	public Algorithm getAlgorithm() { return this.algorithm; }
+	public LinkedList<Device> getDevice() { return this.devices; }
 	public Queue<CustomProcess> getQueue() { return this.queue; }
-	public int getQuantum() { return this.quantum; }
 	
 	// Operations
-	public void tick()
+	public void tick() { for(Device device : devices) tickDevice(device); }
+	
+	public void tickDevice(Device device)
 	{
-		if(device.isEmpty()) { if(!queue.isEmpty()) device.addProcess(queue.poll()); }
-		else if(algorithm.preempt(device,quantum)) { if(!queue.isEmpty()) device.preempt(queue.poll()); }
+		if(device.tick()) { device.addProcess(queue.poll()); } // If device is empty add the next process in queue
+		else
+		{
+			// Check if device should be preempted based on algorithm
+			if(algorithm==Algorithm.RR)
+			{
+				if(device.getRunningTime()>=quantum)
+				{ 
+					device.preempt();
+					device.addProcess(queue.poll());
+				}
+			}
+			else if(algorithm==Algorithm.PS)
+			{
+				if(!queue.isEmpty()&&device.getProcess().getPriority()>queue.peek().getPriority())
+				{
+					device.preempt();
+					device.addProcess(queue.poll());
+				}	
+			}
+		}
 	}
 	
-	public void tickDevice()
+	public void tickQueue() // Ticks all processes in the queue
 	{
-		device.tick();
-	}
-	
-	public void next()
-	{
-		device.setProcess(queue.poll());
+		for(CustomProcess process : queue)
+		{
+			switch(type)
+			{
+			case CPU:
+				process.tick(true, false, false);
+				break;
+			case IO:
+				process.tick(false, true, false);
+				break;
+			}
+		}
 	}
 	
 	public void add(CustomProcess process)
 	{
-		queue.add(process);
-		switch(type)
+		if(process!=null)
 		{
-		case CPU:
-			process.setState(State.READY);
-			break;
-		case IO:
-			process.setState(State.WAITING);
-			break;
-		}
-	}
-	
-	public void incrementWaitTimes()
-	{
-		for(CustomProcess process : queue)
-		{
-			if(!process.getBeenRunning()) process.incrementResponseTime();
+			queue.add(process);
 			switch(type)
 			{
 			case CPU:
-				process.incrementCPUWaitTime();
+				sim.appendLog("Process " + process.getPID() + " added to CPU queue at " + sim.getTime());
+				process.setState(State.READY);
 				break;
 			case IO:
-				process.incrementIOWaitTime();
+				sim.appendLog("Process " + process.getPID() + " added to IO queue at " + sim.getTime());
+				process.setState(State.WAITING);
 				break;
 			}
 		}
+	}
+	
+	public void initialize() { for(Device device : devices) device.addProcess(queue.poll()); }
+	
+	// toString
+	public String toString()
+	{
+		String toString = "";
+		switch(type)
+		{
+		case CPU:
+			toString += "Ready Queue: ";
+			break;
+		case IO:
+			toString += "Waiting Queue: ";
+			break;
+		}
+		for(CustomProcess process : queue) toString += "P" + process.getPID() + " ";
+		return toString;
 	}
 }

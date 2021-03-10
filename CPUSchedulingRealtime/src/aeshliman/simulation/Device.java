@@ -7,119 +7,124 @@ public class Device
 {
 	// Instance Variables
 	private int id;
-	private Simulation sim;
-	private Scheduler scheduler;
 	private DeviceType type;
 	private CustomProcess process;
+	private Simulation sim;
+	
+	private int totalTime;
+	private int activeTime;
 	private int runningTime;
-	private int upTime;
 	
 	// Constructors
-	public Device(int id, Simulation sim, DeviceType type)
+	public Device(int id, DeviceType type, Simulation sim)
 	{
 		this.id = id;
-		this.sim = sim;
 		this.type = type;
 		this.process = null;
-		this.runningTime = 0;
-		this.upTime = 0;
+		this.sim = sim;
+	}
+	
+	{
+		totalTime = 0;
+		activeTime = 0;
+		runningTime = 0;
 	}
 	
 	// Getters and Setters
 	public int getID() { return this.id; }
-	public Simulation getSim() { return this.sim; }
-	public Scheduler getScheduler() { return this.scheduler; }
-	public DeviceType getType() { return this.type; }
 	public CustomProcess getProcess() { return this.process; }
 	public int getRunningTime() { return this.runningTime; }
-	public int getUpTime() { return this.upTime; }
-	
-	public void setProcess(CustomProcess process) { this.process = process; }
-	public void setRunningTime(int runningTime) { this.runningTime = runningTime; }
 	
 	// Operations
-	public void tick()
+	public boolean tick()
 	{
-		if(process!=null)
+		totalTime++;
+		if(process!=null) // Check device is not idle
 		{
-			upTime++;
-			if(process.tick()) // Checks if process finished a burst
+			activeTime++;
+			runningTime++;
+			if(process.tick(false, false, true)) // Check if process finished burst
 			{
-				process.setInIO(false);
-				if(!process.hasBurst()) // If process has no more bursts terminate it
-				{ 
+				if(process.isEmpty()) // Check if process finished all bursts
+				{
 					process.setState(State.TERMINATED);
-					process.setFinishTime(sim.getTime());
-					process.calculateTurnaroundTime();
+					process.setFinishTime(totalTime);
 					sim.incrementTerminatedCount();
+					sim.appendLog("Process " + process.getPID() + " terminated at " + totalTime);
 				}
 				else
 				{
-					switch(type) // Places process into correct queue
+					switch(type) // If process has more bursts add it to the correct queue
 					{
 					case CPU:
+						sim.appendLog("Process " + process.getPID() + " added to CPU at " + totalTime);
 						sim.getIOScheduler().add(process);
-						process.setState(State.WAITING);
 						break;
 					case IO:
+						sim.appendLog("Process " + process.getPID() + " added to IO at " + totalTime);
 						sim.getCPUScheduler().add(process);
-						process.setState(State.READY);
 						break;
 					}
 				}
-				process = null;
 				runningTime = 0;
+				process = null;
 			}
-			else runningTime++;
 		}
-	}
-	
-	public boolean isEmpty()
-	{
-		return process==null;
+		return process==null; // Return whether device has an active process
 	}
 	
 	public void addProcess(CustomProcess newProcess)
 	{
 		process = newProcess;
-		switch(type)
+		if(process!=null)
 		{
-		case CPU:
-			if(!process.getBeenRunning()) process.triggerBeenRunning();
-			process.setState(State.RUNNING);
-			break;
-		case IO:
-			process.setState(State.WAITING);
-			process.setInIO(true);
-			break;
-		}
-		runningTime = 0;
-	}
-	
-	public void preempt(CustomProcess newProcess)
-	{
-		if(this.process!=null)
-		{
-			process.setInIO(false);
-			scheduler.getQueue().add(process);
-			switch(type)
+			switch(type) // Updates processes state depending on device type
 			{
 			case CPU:
-				process.setState(State.READY);
+				sim.appendLog("Process " + process.getPID() + " added to CPU at " + totalTime);
+				process.setState(State.RUNNING);
+				process.setHasRan(true);
 				break;
 			case IO:
+				sim.appendLog("Process " + process.getPID() + " added to IO at " + totalTime);
 				process.setState(State.WAITING);
 				break;
 			}
 		}
-		addProcess(newProcess);
+		runningTime = 0;
 	}
 	
-	public String calculateUtilization()
+	public void preempt()
 	{
-		if(sim.getTime()==0) return "N/A";
-		return String.format("%.2f",(double)upTime/sim.getTime()*100) + "%";
+		if(this.process!=null)
+		{
+			switch(type)
+			{
+			case CPU:
+				sim.getCPUScheduler().add(process);
+				process.setState(State.READY);
+				break;
+			case IO:
+				sim.getIOScheduler().add(process);
+				process.setState(State.WAITING);
+				break;
+			}
+		}
+	}
+	
+	public double calcUtilization()
+	{
+		if(totalTime==0) return 0;
+		return (double)activeTime/totalTime;
 	}
 	
 	// toString
+	public String toString()
+	{
+		String toString = type + " " + id + ": ";
+		if(process==null) toString += "idle";
+		else toString += "P" + process.getPID();
+		toString += ", Utilization: " + String.format("%.2f", calcUtilization()*100) + "%";
+		return toString;
+	}
 }

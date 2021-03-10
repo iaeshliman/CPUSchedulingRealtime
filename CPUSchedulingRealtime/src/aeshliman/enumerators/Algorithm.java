@@ -4,32 +4,27 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import aeshliman.comparators.*;
 import aeshliman.simulation.CustomProcess;
-import aeshliman.simulation.Device;
 
 public enum Algorithm
 {
 	FCFS
 	{
 		public Queue<CustomProcess> getQueue() { return new LinkedList<CustomProcess>(); }
-		public boolean preempt(Device device, int quantum) { return false; }
 	},
 	RR
 	{
 		public Queue<CustomProcess> getQueue() { return new LinkedList<CustomProcess>(); }
-		public boolean preempt(Device device, int quantum) { return device.getRunningTime()>=quantum; }
 	},
 	SJF
 	{
-		public Queue<CustomProcess> getQueue() { return new PriorityQueue<CustomProcess>(); }
-		public boolean preempt(Device device, int quantum) { return false; }
+		public Queue<CustomProcess> getQueue() { return new PriorityQueue<CustomProcess>(new SortByTime()); }
 	},
 	PS
 	{
-		public Queue<CustomProcess> getQueue() { return new PriorityQueue<CustomProcess>(); }
-		public boolean preempt(Device device, int quantum) { return device.getScheduler().getQueue().peek().getPriority()<device.getProcess().getPriority(); }
+		public Queue<CustomProcess> getQueue() { return new PriorityQueue<CustomProcess>(new SortByPriority()); }
 	};
 	
 	public abstract Queue<CustomProcess> getQueue();
-	public abstract boolean preempt(Device device, int quantum);
 }

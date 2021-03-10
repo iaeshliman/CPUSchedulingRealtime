@@ -2,6 +2,10 @@ package aeshliman.simulation;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -20,12 +24,13 @@ public class Simulation
 	private Scheduler cpuScheduler;
 	private Scheduler ioScheduler;
 	private HashMap<Integer,Queue<CustomProcess>> newProcesses;
+	private String log;
 	
 	// Constructors
 	public Simulation(Algorithm algorithm, int quantum, int cpuCount, int ioCount)
 	{
-		this.cpuScheduler = new Scheduler(this,DeviceType.CPU,algorithm,quantum);
-		this.ioScheduler = new Scheduler(this,DeviceType.IO,Algorithm.FCFS,quantum);
+		this.cpuScheduler = new Scheduler(this,DeviceType.CPU,algorithm,quantum,cpuCount);
+		this.ioScheduler = new Scheduler(this,DeviceType.IO,Algorithm.FCFS,quantum,ioCount);
 		this.newProcesses = new HashMap<Integer,Queue<CustomProcess>>();
 	}
 	
@@ -35,6 +40,9 @@ public class Simulation
 		processCount = 0;
 		terminatedCount = 0;
 		processes = new LinkedList<CustomProcess>();
+		log = "==================================================\n";
+		log += "\tLog Created - " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"));
+		log += "\n==================================================\n";
 	}
 	
 	// Getters and Setters
@@ -46,28 +54,41 @@ public class Simulation
 	public LinkedList<Device> getIO() { return ioScheduler.getDevice(); }
 	public Queue<CustomProcess> getReadyQueue() { return cpuScheduler.getQueue(); }
 	public Queue<CustomProcess> getWaitingQueue() { return ioScheduler.getQueue(); }
+	public int getTerminatedCount() { return terminatedCount; }
+	public String getLog() { return this.log; }
 	
 	// Operations
 	public void tick()
 	{
 		time++;
-		// Increments the wait times of all processes currently in a queue
-		cpuScheduler.incrementWaitTimes();
-		ioScheduler.incrementWaitTimes();
 		// Adds processes to ready queue at the correct arrival times
-		Queue<CustomProcess> newProcessQueue = newProcesses.get(time);
-		if(newProcessQueue!=null) for(CustomProcess process : newProcessQueue) cpuScheduler.add(process);
+		addNewProcesses();
+		// Increments the wait times of all processes currently in a queue
+		cpuScheduler.tickQueue();
+		ioScheduler.tickQueue();
 		// Updates simulation one time unit
-		cpuScheduler.tickDevice();
-		ioScheduler.tickDevice();
 		cpuScheduler.tick();
 		ioScheduler.tick();
 	}
 	
-	public boolean loadScenario(String path)
+	private void addNewProcesses()
 	{
-		if(path==null) return false;
-		try(Scanner scan = new Scanner(new File(path));)
+		// Adds processes to ready queue at the correct arrival times
+		Queue<CustomProcess> newProcessQueue = newProcesses.get(time);
+		if(newProcessQueue!=null)
+		{
+			for(CustomProcess process : newProcessQueue)
+			{
+				appendLog("Process " + process.getPID() + " is created at " + time);
+				cpuScheduler.add(process);
+			}
+		}
+	}
+	
+	public boolean loadScenario(File file)
+	{
+		if(file==null) return false;
+		try(Scanner scan = new Scanner(file);)
 		{
 			while(scan.hasNext())
 			{
@@ -83,27 +104,12 @@ public class Simulation
 				processes.add(process);
 				newProcesses.get(Integer.parseInt(line[1])).add(process);
 			}
+			appendLog("Loaded scenario file " + file.getName());
+			addNewProcesses();
+			cpuScheduler.initialize();
 		}
 		catch(FileNotFoundException e) { return false; }
-		
 		return true;
-	}
-	
-	public boolean validScenario(String path)
-	{
-		if(path==null) return false;
-		File file = new File(path);
-		return file.isFile();
-	}
-	
-	public double calcAvgTurnaround()
-	{
-		return 0;
-	}
-	
-	public double calcAvgWait()
-	{
-		return 0;
 	}
 	
 	public double calcThroughput()
@@ -112,12 +118,53 @@ public class Simulation
 		return (double)terminatedCount/time;
 	}
 	
-	public void incrementTerminatedCount() { terminatedCount++; }
-	
-	public CustomProcess findProcess(int pid)
+	public double calcAvgTurnaround()
 	{
-		for(CustomProcess process : processes) { if(process.getPID()==pid) return process; }
-		return null;
+		if(time==0) return 0;
+		else
+		{
+			double sum = 0;
+			for(CustomProcess process : processes) sum += process.getTurnaroundTime();
+			return sum/processes.size();
+		}
 	}
 	
+	public double calcAvgCPUWait()
+	{
+		if(time==0) return 0;
+		else
+		{
+			double sum = 0;
+			for(CustomProcess process : processes) sum += process.getCpuWaitTime();
+			return sum/processes.size();
+		}
+	}
+	
+	public double calcAvgIOWait()
+	{
+		if(time==0) return 0;
+		else
+		{
+			double sum = 0;
+			for(CustomProcess process : processes) sum += process.getIoWaitTime();
+			return sum/processes.size();
+		}
+	}
+	
+	public void incrementTerminatedCount() { terminatedCount++; }
+	public void appendLog(String line) { log += line + "\n"; }
+	
+	// toString
+	public String toString()
+	{
+		String toString = "System Time: " + time + ", Throughput: " + String.format("%.2f", calcThroughput()) + ", Avg Wait: "
+				+ String.format("%.2f", calcAvgCPUWait()) + ", Avg IO Wait: " + String.format("%.2f", calcAvgIOWait()) + "\n";
+		toString += cpuScheduler.getDevice() + "\n";
+		toString += cpuScheduler + "\n";
+		toString += ioScheduler.getDevice() + "\n";
+		toString += ioScheduler + "\n";
+		for(CustomProcess process : processes) toString += process + "\n";
+		toString += "-------------------------";
+		return toString;
+	}
 }
