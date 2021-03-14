@@ -50,12 +50,11 @@ public class Window
 	// Instance Variables
 	protected JFrame window;
 		// GUI Components
+	private JButton startButton;
 	private JLabel systemTimeLabel;
 	private JLabel throughputLabel;
 	private JLabel turnaroundLabel;
 	private JLabel waitTimeLabel;
-	private JPanel cpuPanel;
-	private JPanel ioPanel;
 	private JPanel cpuQueueSubpanel;
 	private JPanel ioQueueSubpanel;
 	private JPanel processPanel;
@@ -80,6 +79,12 @@ public class Window
 		// Device Data
 	private LinkedList<JPanel> cpus;
 	private LinkedList<JPanel> ios;
+	private JLabel cpuCountLabel;
+	private JLabel ioCountLabel;
+	private JLabel quantumLabel;
+	private JLabel algorithmLabel;
+	private JPanel cpuSubpanel;
+	private JPanel ioSubpanel;
 	
 	// Constructor
 	public Window()
@@ -128,6 +133,7 @@ public class Window
 					initialized = false;
 					start = false;
 					step = false;
+					startButton.setText("Start");
 				}
 				JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
 				fc.setFileFilter(new FileNameExtensionFilter("Text Files","txt","text"));
@@ -136,6 +142,7 @@ public class Window
 				{
 				case JFileChooser.APPROVE_OPTION:
 					scenarioFile = fc.getSelectedFile();
+					initializeSimulation();
 					break;
 				default:
 					break;
@@ -179,6 +186,8 @@ public class Window
 				initialized = false;
 				start = false;
 				step = false;
+				startButton.setText("Start");
+				if(scenarioFile!=null) initializeSimulation();
 			}
 		});
 		fileMenu.add(resetMenuItem);
@@ -188,8 +197,6 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				// TODO: Implement settings button
-					// Should pop up a form window for setting selection
 				SettingsDialog settingDialog = new SettingsDialog();
 				settingDialog.setVisible(true);
 			}
@@ -215,13 +222,25 @@ public class Window
 		headPanel.add(dataPanel);
 		dataPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
-		JButton startButton = new JButton("Start");
+		startButton = new JButton("Start");
 		startButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				if(!initialized) { initializeSimulation(); }
-				start = true;
+				if(!initialized) { JOptionPane.showMessageDialog(window, "Please load a simulation scenario first"); }
+				else
+				{
+					if(start)
+					{
+						startButton.setText("Resume");
+						start = false;
+					}
+					else
+					{
+						startButton.setText("Pause");
+						start = true;
+					}
+				}
 			}
 		});
 		controlPanel.add(startButton);
@@ -231,23 +250,27 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				if(!initialized) { initializeSimulation(); }
-				step = true;
+				if(!initialized) { JOptionPane.showMessageDialog(window, "Please load a simulation scenario first"); }
+				else step = true;
 			}
 		});
 		controlPanel.add(stepButton);
 		
-		JLabel cpuCountLabel = new JLabel("CPU's: 1");
+		algorithmLabel = new JLabel("Algorithm: FCFS");
+		algorithmLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		controlPanel.add(algorithmLabel);
+		
+		quantumLabel = new JLabel("Quantum: 5");
+		quantumLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		controlPanel.add(quantumLabel);
+		
+		cpuCountLabel = new JLabel("CPU's: 1");
 		cpuCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		controlPanel.add(cpuCountLabel);
 		
-		JLabel ioCountLabel = new JLabel("IO's: 1");
+		ioCountLabel = new JLabel("IO's: 1");
 		ioCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		controlPanel.add(ioCountLabel);
-		
-		JLabel quantumLabel = new JLabel("Quantum: 5");
-		quantumLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		controlPanel.add(quantumLabel);
 		
 		systemTimeLabel = new JLabel("System Time: X");
 		systemTimeLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -274,7 +297,7 @@ public class Window
 		mainPanel.add(contentPanel);
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
 		
-		cpuPanel = new JPanel();
+		JPanel cpuPanel = new JPanel();
 		cpuPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
 		contentPanel.add(cpuPanel);
 		cpuPanel.setLayout(new BorderLayout(0, 0));
@@ -282,6 +305,10 @@ public class Window
 		JLabel cpuLabel = new JLabel("CPU");
 		cpuLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		cpuPanel.add(cpuLabel, BorderLayout.NORTH);
+		
+		cpuSubpanel = new JPanel();
+		cpuPanel.add(cpuSubpanel, BorderLayout.CENTER);
+		cpuSubpanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
 		JPanel queuePanel = new JPanel();
 		queuePanel.setPreferredSize(new Dimension(450, 10));
@@ -313,7 +340,7 @@ public class Window
 		ioQueueSubpanel = new JPanel();
 		ioQueuePanel.add(ioQueueSubpanel, BorderLayout.CENTER);
 		
-		ioPanel = new JPanel();
+		JPanel ioPanel = new JPanel();
 		ioPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
 		contentPanel.add(ioPanel);
 		ioPanel.setLayout(new BorderLayout(0, 0));
@@ -321,6 +348,10 @@ public class Window
 		JLabel IO = new JLabel("IO");
 		IO.setHorizontalAlignment(SwingConstants.CENTER);
 		ioPanel.add(IO, BorderLayout.NORTH);
+		
+		ioSubpanel = new JPanel();
+		ioPanel.add(ioSubpanel, BorderLayout.CENTER);
+		ioSubpanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
 		processPanel = new JPanel();
 		processPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
@@ -373,13 +404,20 @@ public class Window
 		tableModel.fireTableDataChanged();
 		
 		// Initialize devices
+		int cpuCols = (int) Math.ceil(Math.sqrt(sim.getCPU().size()));
+		int cpuRows = (int) Math.ceil((double)sim.getCPU().size()/cpuCols);
+		int ioCols = (int) Math.ceil(Math.sqrt(sim.getIO().size()));
+		int ioRows = (int) Math.ceil((double)sim.getIO().size()/ioCols);
+		cpuSubpanel.setLayout(new GridLayout(cpuRows, cpuCols, 0, 0));
+		ioSubpanel.setLayout(new GridLayout(ioRows, ioCols, 0, 0));
+		
 		cpus = new LinkedList<JPanel>();
 		for(Device cpu : sim.getCPU())
 		{
 			JPanel panel = new JPanel();
 			panel.setLayout(new BorderLayout(0,0));
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-			cpuPanel.add(panel);
+			cpuSubpanel.add(panel);
 			JLabel label = new JLabel("CPU " + cpu.getID());
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label, BorderLayout.NORTH);
@@ -390,15 +428,15 @@ public class Window
 			panel.add(process, BorderLayout.CENTER);
 			cpus.add(cpu.getID(),panel);
 		}
-		cpuPanel.revalidate();
-		cpuPanel.repaint();
+		cpuSubpanel.revalidate();
+		cpuSubpanel.repaint();
 		ios = new LinkedList<JPanel>();
 		for(Device io : sim.getIO())
 		{
 			JPanel panel = new JPanel();
 			panel.setLayout(new BorderLayout(0,0));
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-			ioPanel.add(panel);
+			ioSubpanel.add(panel);
 			JLabel label = new JLabel("IO " + io.getID());
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label, BorderLayout.NORTH);
@@ -409,8 +447,8 @@ public class Window
 			panel.add(process, BorderLayout.CENTER);
 			ios.add(io.getID(),panel);
 		}
-		ioPanel.revalidate();
-		ioPanel.repaint();
+		ioSubpanel.revalidate();
+		ioSubpanel.repaint();
 	}
 	
 	public void initializeTimer()
@@ -508,18 +546,12 @@ public class Window
 		tableModel.fireTableDataChanged();
 		
 		// Resets Devices
-		cpuPanel.removeAll();
-		JLabel cpuLabel = new JLabel("CPU");
-		cpuLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		cpuPanel.add(cpuLabel, BorderLayout.NORTH);
-		cpuPanel.revalidate();
-		cpuPanel.repaint();
-		ioPanel.removeAll();
-		JLabel IO = new JLabel("IO");
-		IO.setHorizontalAlignment(SwingConstants.CENTER);
-		ioPanel.add(IO, BorderLayout.NORTH);
-		ioPanel.revalidate();
-		ioPanel.repaint();
+		cpuSubpanel.removeAll();
+		cpuSubpanel.revalidate();
+		cpuSubpanel.repaint();
+		ioSubpanel.removeAll();
+		ioSubpanel.revalidate();
+		ioSubpanel.repaint();
 		
 		// Resets Queues
 		cpuQueueSubpanel.removeAll();
@@ -551,10 +583,10 @@ public class Window
 		private JTextField ioField;
 		private JTextField cpuField;
 		private JTextField quantumField;
-		private JLabel algorithmLabel;
-		private JLabel quantumLabel;
-		private JLabel cpuLabel;
-		private JLabel ioLabel;
+		private JLabel algorithmLabelSettings;
+		private JLabel quantumLabelSettings;
+		private JLabel cpuLabelSettings;
+		private JLabel ioLabelSettings;
 		
 		public SettingsDialog()
 		{
@@ -572,18 +604,18 @@ public class Window
 				JPanel algorithmPanel = new JPanel();
 				contentPanel.add(algorithmPanel);
 				{
-					algorithmLabel = new JLabel("Algorithm");
-					algorithmLabel.setMinimumSize(new Dimension(70, 20));
-					algorithmLabel.setMaximumSize(new Dimension(70, 20));
-					algorithmLabel.setHorizontalAlignment(SwingConstants.CENTER);
-					algorithmLabel.setPreferredSize(new Dimension(70, 20));
-					algorithmPanel.add(algorithmLabel);
+					algorithmLabelSettings = new JLabel("Algorithm");
+					algorithmLabelSettings.setMinimumSize(new Dimension(70, 20));
+					algorithmLabelSettings.setMaximumSize(new Dimension(70, 20));
+					algorithmLabelSettings.setHorizontalAlignment(SwingConstants.CENTER);
+					algorithmLabelSettings.setPreferredSize(new Dimension(70, 20));
+					algorithmPanel.add(algorithmLabelSettings);
 				}
 				{
 					algorithmComboBox = new JComboBox<Algorithm>();
 					algorithmComboBox.setMinimumSize(new Dimension(70, 20));
 					algorithmComboBox.setMaximumSize(new Dimension(70, 20));
-					algorithmLabel.setLabelFor(algorithmComboBox);
+					algorithmLabelSettings.setLabelFor(algorithmComboBox);
 					algorithmComboBox.setPreferredSize(new Dimension(70, 20));
 					algorithmComboBox.setModel(new DefaultComboBoxModel<Algorithm>(Algorithm.values()));
 					algorithmComboBox.setSelectedIndex(0);
@@ -594,16 +626,16 @@ public class Window
 				JPanel quantumPanel = new JPanel();
 				contentPanel.add(quantumPanel);
 				{
-					quantumLabel = new JLabel("Quantum");
-					quantumLabel.setMinimumSize(new Dimension(70, 20));
-					quantumLabel.setMaximumSize(new Dimension(70, 20));
-					quantumLabel.setHorizontalAlignment(SwingConstants.CENTER);
-					quantumLabel.setPreferredSize(new Dimension(70, 20));
-					quantumPanel.add(quantumLabel);
+					quantumLabelSettings = new JLabel("Quantum");
+					quantumLabelSettings.setMinimumSize(new Dimension(70, 20));
+					quantumLabelSettings.setMaximumSize(new Dimension(70, 20));
+					quantumLabelSettings.setHorizontalAlignment(SwingConstants.CENTER);
+					quantumLabelSettings.setPreferredSize(new Dimension(70, 20));
+					quantumPanel.add(quantumLabelSettings);
 				}
 				{
 					quantumField = new JTextField();
-					quantumLabel.setLabelFor(quantumField);
+					quantumLabelSettings.setLabelFor(quantumField);
 					quantumField.setPreferredSize(new Dimension(70, 20));
 					quantumPanel.add(quantumField);
 					quantumField.setColumns(10);
@@ -613,16 +645,16 @@ public class Window
 				JPanel cpuPanel = new JPanel();
 				contentPanel.add(cpuPanel);
 				{
-					cpuLabel = new JLabel("CPU Count");
-					cpuLabel.setMinimumSize(new Dimension(70, 20));
-					cpuLabel.setMaximumSize(new Dimension(70, 20));
-					cpuLabel.setHorizontalAlignment(SwingConstants.CENTER);
-					cpuLabel.setPreferredSize(new Dimension(70, 20));
-					cpuPanel.add(cpuLabel);
+					cpuLabelSettings = new JLabel("CPU Count");
+					cpuLabelSettings.setMinimumSize(new Dimension(70, 20));
+					cpuLabelSettings.setMaximumSize(new Dimension(70, 20));
+					cpuLabelSettings.setHorizontalAlignment(SwingConstants.CENTER);
+					cpuLabelSettings.setPreferredSize(new Dimension(70, 20));
+					cpuPanel.add(cpuLabelSettings);
 				}
 				{
 					cpuField = new JTextField();
-					cpuLabel.setLabelFor(cpuField);
+					cpuLabelSettings.setLabelFor(cpuField);
 					cpuField.setPreferredSize(new Dimension(70, 20));
 					cpuPanel.add(cpuField);
 					cpuField.setColumns(10);
@@ -632,16 +664,16 @@ public class Window
 				JPanel ioPanel = new JPanel();
 				contentPanel.add(ioPanel);
 				{
-					ioLabel = new JLabel("IO Count");
-					ioLabel.setMinimumSize(new Dimension(70, 20));
-					ioLabel.setMaximumSize(new Dimension(70, 20));
-					ioLabel.setHorizontalAlignment(SwingConstants.CENTER);
-					ioLabel.setPreferredSize(new Dimension(70, 20));
-					ioPanel.add(ioLabel);
+					ioLabelSettings = new JLabel("IO Count");
+					ioLabelSettings.setMinimumSize(new Dimension(70, 20));
+					ioLabelSettings.setMaximumSize(new Dimension(70, 20));
+					ioLabelSettings.setHorizontalAlignment(SwingConstants.CENTER);
+					ioLabelSettings.setPreferredSize(new Dimension(70, 20));
+					ioPanel.add(ioLabelSettings);
 				}
 				{
 					ioField = new JTextField();
-					ioLabel.setLabelFor(ioField);
+					ioLabelSettings.setLabelFor(ioField);
 					ioField.setPreferredSize(new Dimension(70, 20));
 					ioPanel.add(ioField);
 					ioField.setColumns(10);
@@ -688,7 +720,21 @@ public class Window
 								quantum = q;
 								cpuCount = c;
 								ioCount = i;
+								algorithmLabel.setText("Algorithm: " + algorithm);
+								cpuCountLabel.setText("CPU's: " + Integer.toString(c));
+								ioCountLabel.setText("IO's: " + Integer.toString(i));
+								quantumLabel.setText("Quantum: " + Integer.toString(q));
 								dispose();
+								if(initialized)
+								{
+									resetGUI();
+									finished = false;
+									initialized = false;
+									start = false;
+									step = false;
+									startButton.setText("Start");
+									initializeSimulation();
+								}
 							}
 						}
 					});
@@ -699,6 +745,7 @@ public class Window
 				}
 				{
 					JButton cancelButton = new JButton("Cancel");
+					cancelButton.addActionListener(new ActionListener() { public void actionPerformed(ActionEvent e) { dispose(); } });
 					cancelButton.setPreferredSize(new Dimension(100, 25));
 					cancelButton.setActionCommand("Cancel");
 					buttonPane.add(cancelButton);
