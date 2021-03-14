@@ -60,6 +60,7 @@ public class Simulation
 	// Operations
 	public void tick()
 	{
+		// Increments time and ticks all processes, devices, and queues
 		time++;
 		tickProcesses();
 		cpuScheduler.tickDevices();
@@ -90,25 +91,27 @@ public class Simulation
 		if(file==null) return false;
 		try(Scanner scan = new Scanner(file);)
 		{
-			while(scan.hasNext())
+			while(scan.hasNext()) // Loops through each line of the file
 			{
 				Queue<Burst> bursts = new LinkedList<Burst>();
 				String[] line = scan.nextLine().split(" ");
-				for(int i=3; i<line.length; i++)
+				for(int i=3; i<line.length; i++) // Creates a burst object for each burst
 				{
 					if(i%2==0) bursts.add(new Burst(Integer.parseInt(line[i]),DeviceType.IO));
 					else bursts.add(new Burst(Integer.parseInt(line[i]),DeviceType.CPU));
 				}
+				// Creates a process object and adds to newProcess map and process list
 				CustomProcess process = new CustomProcess(processCount++,line[0],bursts,Integer.parseInt(line[2]),Integer.parseInt(line[1]));
 				newProcesses.putIfAbsent(Integer.parseInt(line[1]), new LinkedList<CustomProcess>());
 				processes.add(process);
 				newProcesses.get(Integer.parseInt(line[1])).add(process);
 			}
+			// Initialized the simulation for time 0
 			appendLog("Loaded scenario file " + file.getName());
 			addNewProcesses();
 			cpuScheduler.initialize();
 		}
-		catch(FileNotFoundException e) { return false; }
+		catch(Exception e) { return false; }
 		return true;
 	}
 	

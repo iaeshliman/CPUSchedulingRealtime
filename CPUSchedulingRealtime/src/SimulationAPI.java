@@ -9,39 +9,36 @@ import aeshliman.enumerators.Algorithm;
 import aeshliman.simulation.CustomProcess;
 import aeshliman.simulation.Simulation;
 
+/*
+ * Class was used mostly for testing purposes in console mode
+ */
+
 public class SimulationAPI
 {
 	// Instance Variables
 	private Simulation sim;
 	
 	// Constructors
-	public SimulationAPI(boolean consoleMode)
+	public SimulationAPI()
 	{
-		if(consoleMode)
+		Algorithm algorithm;
+		int quantum;
+		int cpuCount;
+		int ioCount;
+		while(true)
 		{
-			Algorithm algorithm;
-			int quantum;
-			int cpuCount;
-			int ioCount;
-			while(true)
+			try
 			{
-				try
-				{
-					algorithm = (Algorithm) JOptionPane.showInputDialog(null,"Select algorithm",null,JOptionPane.QUESTION_MESSAGE,null,Algorithm.values(),Algorithm.values()[0]);
-					quantum = Integer.parseInt(JOptionPane.showInputDialog("Please enter quantum time"));
-					cpuCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter cpu count"));
-					ioCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter io count"));
-					break;
-				}
-				catch(Exception e) { JOptionPane.showMessageDialog(null, "Invalid Entry");}
+				algorithm = (Algorithm) JOptionPane.showInputDialog(null,"Select algorithm",null,JOptionPane.QUESTION_MESSAGE,null,Algorithm.values(),Algorithm.values()[0]);
+				quantum = Integer.parseInt(JOptionPane.showInputDialog("Please enter quantum time"));
+				cpuCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter cpu count"));
+				ioCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter io count"));
+				break;
 			}
-			sim = new Simulation(algorithm,quantum,cpuCount,ioCount);
-			loadScenario();
+			catch(Exception e) { JOptionPane.showMessageDialog(null, "Invalid Entry");}
 		}
-		else
-		{
-			
-		}
+		sim = new Simulation(algorithm,quantum,cpuCount,ioCount);
+		loadScenario();
 	}
 	
 	// Operations

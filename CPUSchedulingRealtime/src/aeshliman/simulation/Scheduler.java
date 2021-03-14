@@ -40,7 +40,7 @@ public class Scheduler
 		for(Device device : devices)
 		{
 			if(device.isEmpty()) device.addProcess(queue.poll());
-			else
+			else // Checks for the need to preempt a process
 			{
 				if(algorithm==Algorithm.RR)
 				{
@@ -67,7 +67,7 @@ public class Scheduler
 		if(process!=null)
 		{
 			queue.add(process);
-			switch(type)
+			switch(type) // Sets state and adds to log
 			{
 			case CPU:
 				sim.appendLog("Process " + process.getPID() + " added to CPU queue at " + sim.getTime());

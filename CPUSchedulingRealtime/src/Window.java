@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -19,7 +18,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JPanel;
 import java.awt.GridLayout;
-
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -27,15 +25,11 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-
 import javax.swing.JTable;
 import javax.swing.JTextField;
-
 import java.awt.Color;
-
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
@@ -126,7 +120,7 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				if(initialized)
+				if(initialized) // If the simulation was initialized reset it
 				{
 					resetGUI();
 					finished = false;
@@ -135,6 +129,7 @@ public class Window
 					step = false;
 					startButton.setText("Start");
 				}
+				// Selects a text file only
 				JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
 				fc.setFileFilter(new FileNameExtensionFilter("Text Files","txt","text"));
 				fc.setAcceptAllFileFilterUsed(false);
@@ -156,9 +151,11 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				// Checks that the simulation has been initialized first
 				if(!initialized) JOptionPane.showMessageDialog(window, "Must start simulation first");
 				else
 				{
+					// Selects a text file to save output
 					JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
 					fc.setFileFilter(new FileNameExtensionFilter("Text Files","txt","text"));
 					fc.setAcceptAllFileFilterUsed(false);
@@ -181,6 +178,7 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				// Resets the simulation to time 0
 				resetGUI();
 				finished = false;
 				initialized = false;
@@ -197,6 +195,7 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				// Opens a popup window for selecting the simulation settings
 				SettingsDialog settingDialog = new SettingsDialog();
 				settingDialog.setVisible(true);
 			}
@@ -227,9 +226,11 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				// Ensures a scenario has been loaded
 				if(!initialized) { JOptionPane.showMessageDialog(window, "Please load a simulation scenario first"); }
 				else
 				{
+					// Changes button label and updates control booleans
 					if(start)
 					{
 						startButton.setText("Resume");
@@ -250,6 +251,7 @@ public class Window
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				// Ensures a scenario has been loaded and updates control booleans
 				if(!initialized) { JOptionPane.showMessageDialog(window, "Please load a simulation scenario first"); }
 				else step = true;
 			}
@@ -373,7 +375,14 @@ public class Window
 		
 		// Initializes simulation object
 		sim = new Simulation(algorithm,quantum,cpuCount,ioCount);
-		sim.loadScenario(scenarioFile);
+		if(!sim.loadScenario(scenarioFile))
+		{
+			JOptionPane.showMessageDialog(window, "Unable to parse scenario file\nPlease select a new one");
+			initialized = false;
+			scenarioFile = null;
+			sim = null;
+			return;
+		}
 		
 		// Updates the simulation statistics
 		systemTimeLabel.setText("System Time: " + Integer.toString(sim.getTime()));
@@ -418,12 +427,12 @@ public class Window
 			panel.setLayout(new BorderLayout(0,0));
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 			cpuSubpanel.add(panel);
-			JLabel label = new JLabel("CPU " + cpu.getID());
+			JLabel label = new JLabel("CPU " + cpu.getID() + " - Utilization " + String.format("%.2f",cpu.calcUtilization()*100) + "%");
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label, BorderLayout.NORTH);
 			JLabel process = new JLabel();
 			if(cpu.getProcess()==null) process.setText("Idle");
-			else process.setText("P" + cpu.getProcess());
+			else process.setText("P" + cpu.getProcess().getPID());
 			process.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(process, BorderLayout.CENTER);
 			cpus.add(cpu.getID(),panel);
@@ -437,7 +446,7 @@ public class Window
 			panel.setLayout(new BorderLayout(0,0));
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 			ioSubpanel.add(panel);
-			JLabel label = new JLabel("IO " + io.getID());
+			JLabel label = new JLabel("IO " + io.getID() + " - Utilization " + String.format("%.2f",io.calcUtilization()*100) + "%");
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label, BorderLayout.NORTH);
 			JLabel process = new JLabel();
@@ -468,12 +477,14 @@ public class Window
 		// Devices
 		for(Device cpu : sim.getCPU())
 		{
+			((JLabel)cpus.get(cpu.getID()).getComponent(0)).setText("CPU " + cpu.getID() + " - Utilization " + String.format("%.2f",cpu.calcUtilization()*100) + "%");
 			JLabel label = (JLabel)cpus.get(cpu.getID()).getComponent(1);
 			if(cpu.getProcess()==null) label.setText("Idle");
 			else label.setText("P" + cpu.getProcess().getPID());
 		}
 		for(Device io : sim.getIO())
 		{
+			((JLabel)ios.get(io.getID()).getComponent(0)).setText("IO " + io.getID() + " - Utilization " + String.format("%.2f",io.calcUtilization()*100) + "%");
 			JLabel label = (JLabel)ios.get(io.getID()).getComponent(1);
 			if(io.getProcess()==null) label.setText("Idle");
 			else label.setText("P" + io.getProcess().getPID());
@@ -564,10 +575,11 @@ public class Window
 	
 	public void tick()
 	{
+		// Ticks the simulation and updates the gui
 		sim.tick();
 		updateGUI();
 		step = false;
-		finished = sim.getTerminatedCount()==sim.getProcesses().size();
+		finished = sim.getTerminatedCount()==sim.getProcesses().size(); // Stops the simulation when all processes are finished
 		if(finished)
 		{
 			step = false;
@@ -577,6 +589,11 @@ public class Window
 	
 	private class SettingsDialog extends JDialog
 	{
+		/*
+		 * A popup window for selecting simulation settings
+		 * Has a combo box and three text fields
+		 */
+		
 		private static final long serialVersionUID = 61127048419647388L;
 		private final JPanel contentPanel = new JPanel();
 		private JComboBox<Algorithm> algorithmComboBox;
@@ -688,7 +705,7 @@ public class Window
 					JButton submitButton = new JButton("Submit");
 					submitButton.addActionListener(new ActionListener()
 					{
-						public void actionPerformed(ActionEvent e)
+						public void actionPerformed(ActionEvent e) // Parses the user input ensuring valid entries
 						{
 							boolean exit = true;
 							Algorithm a = null;
@@ -715,7 +732,7 @@ public class Window
 								ioField.setText("Invalid Entry");
 								exit = false;
 							}
-							if(exit)
+							if(exit) // If all entries are valid update simulation settings
 							{
 								algorithm = a;
 								quantum = q;
@@ -726,7 +743,7 @@ public class Window
 								ioCountLabel.setText("IO's: " + Integer.toString(i));
 								quantumLabel.setText("Quantum: " + Integer.toString(q));
 								dispose();
-								if(initialized)
+								if(initialized) // Reset simulation if already initialized
 								{
 									resetGUI();
 									finished = false;

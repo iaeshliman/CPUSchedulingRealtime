@@ -34,54 +34,16 @@ public class Device
 	public int getRunningTime() { return this.runningTime; }
 	
 	// Operations
-	/*
-	public boolean tick()
-	{
-		totalTime++;
-		if(process!=null) // Check device is not idle
-		{
-			activeTime++;
-			runningTime++;
-			if(process.tick()) // Check if process finished burst
-			{
-				if(process.isEmpty()) // Check if process finished all bursts
-				{
-					process.setState(State.TERMINATED);
-					process.setFinishTime(totalTime);
-					sim.incrementTerminatedCount();
-					sim.appendLog("Process " + process.getPID() + " terminated at " + totalTime);
-				}
-				else
-				{
-					switch(type) // If process has more bursts add it to the correct queue
-					{
-					case CPU:
-						sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + totalTime);
-						sim.getIOScheduler().add(process,false);
-						break;
-					case IO:
-						sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + totalTime);
-						sim.getCPUScheduler().add(process,false);
-						break;
-					}
-				}
-				runningTime = 0;
-				process = null;
-			}
-		}
-		return process==null; // Return whether device has an active process
-	}
-	*/
 	public void tick()
 	{
 		if(process!=null)
 		{
 			activeTime++;
 			runningTime++;
-			if(process.peekTime()==0)
+			if(process.peekTime()==0) // Checks if the active process has finished its current burst
 			{
 				process.finishBurst();
-				if(process.isEmpty())
+				if(process.isEmpty()) // Checks if active process has anymore bursts
 				{
 					process.setState(State.TERMINATED);
 					sim.incrementTerminatedCount();
@@ -132,7 +94,7 @@ public class Device
 	
 	public void preempt()
 	{
-		if(this.process!=null)
+		if(this.process!=null) // Places the current process back into queue to be finished later
 		{
 			process.setInIO(false);
 			switch(type)

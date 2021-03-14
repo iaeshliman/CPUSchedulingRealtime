@@ -9,22 +9,21 @@ public class Driver
 		{
 			EventQueue.invokeLater(new Runnable()
 			{
-				public void run() // TODO: Fix the gui mode as its being a pain
+				public void run()
 				{
 					try
 					{
 						Window window = new Window();
 						window.window.setVisible(true);
-					} catch (Exception e)
-					{
-						e.printStackTrace();
 					}
+					catch(Exception e) { e.printStackTrace(); }
 				}
 			});
 		}
 		else // Console mode
 		{
-			SimulationAPI api = new SimulationAPI(true);
+			// Console mode is mostly for debugging purposes and not entirely perfect
+			SimulationAPI api = new SimulationAPI();
 			api.run();
 			api.saveLog();
 		}

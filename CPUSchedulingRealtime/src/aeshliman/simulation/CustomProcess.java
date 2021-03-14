@@ -66,7 +66,7 @@ public class CustomProcess
 	// Operations
 	public void tick() // Returns true if burst finished
 	{
-		switch(state)
+		switch(state) // Increments the appropriate stats
 		{
 		case NEW:
 			finishTime++;
