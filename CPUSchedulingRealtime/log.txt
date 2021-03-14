@@ -1,34 +1,72 @@
 ==================================================
-	Log Created - 03-13-2021 17:07:19
+	Log Created - 03-13-2021 19:17:06
 ==================================================
 Loaded scenario file scenario.txt
 Process 0 is created at 3
-Process 0 added to CPU 0 at 2
 Process 0 added to CPU queue at 3
+Process 0 added to CPU 0 at 3
 Process 2 is created at 5
 Process 2 added to CPU queue at 5
-Process 0 added to CPU 0 at 8
-Process 0 added to IO 0 at 7
-Process 0 added to IO queue at 8
-Process 2 added to CPU 0 at 8
+Process 0 added to CPU queue at 6
+Process 2 added to CPU 0 at 6
+Process 2 added to CPU 0 at 9
+Process 2 added to IO queue at 9
+Process 0 added to CPU 0 at 9
+Process 2 added to IO 0 at 9
 Process 1 is created at 10
 Process 1 added to CPU queue at 10
-Process 2 added to CPU 0 at 11
-Process 2 added to IO queue at 11
+Process 0 added to CPU 0 at 11
+Process 0 added to IO queue at 11
 Process 1 added to CPU 0 at 11
-Process 0 added to IO 0 at 11
-Process 0 added to CPU queue at 11
-Process 2 added to IO 0 at 11
+Process 1 added to CPU queue at 14
+Process 1 added to CPU 0 at 14
+Process 1 added to CPU queue at 17
+Process 1 added to CPU 0 at 17
+Process 1 added to CPU queue at 20
+Process 1 added to CPU 0 at 20
+Process 1 added to CPU queue at 23
+Process 1 added to CPU 0 at 23
+Process 1 added to CPU queue at 26
+Process 1 added to CPU 0 at 26
+Process 1 added to CPU queue at 29
+Process 1 added to CPU 0 at 29
+Process 1 added to CPU queue at 32
+Process 1 added to CPU 0 at 32
+Process 1 added to CPU queue at 35
+Process 1 added to CPU 0 at 35
 Process 1 terminated at 36
-Process 0 added to CPU 0 at 36
-Process 0 added to CPU 0 at 44
-Process 0 added to IO queue at 44
-Process 2 added to IO 0 at 56
-Process 2 added to CPU 0 at 56
-Process 2 added to CPU queue at 56
-Process 0 added to IO 0 at 56
+Process 2 added to IO 0 at 54
+Process 2 added to CPU queue at 54
+Process 2 added to CPU 0 at 54
+Process 0 added to IO 0 at 54
+Process 2 added to CPU queue at 57
+Process 2 added to CPU 0 at 57
 Process 0 added to IO 0 at 58
 Process 0 added to CPU queue at 58
-Process 2 terminated at 77
+Process 2 added to CPU queue at 60
+Process 0 added to CPU 0 at 60
+Process 0 added to CPU queue at 63
+Process 2 added to CPU 0 at 63
+Process 2 added to CPU queue at 66
+Process 0 added to CPU 0 at 66
+Process 0 added to CPU queue at 69
+Process 2 added to CPU 0 at 69
+Process 2 added to CPU queue at 72
+Process 0 added to CPU 0 at 72
+Process 0 added to CPU 0 at 74
+Process 0 added to IO queue at 74
+Process 2 added to CPU 0 at 74
+Process 0 added to IO 0 at 74
+Process 0 added to IO 0 at 76
+Process 0 added to CPU queue at 76
+Process 2 added to CPU queue at 77
 Process 0 added to CPU 0 at 77
-Process 0 terminated at 86
+Process 0 added to CPU queue at 80
+Process 2 added to CPU 0 at 80
+Process 2 added to CPU queue at 83
+Process 0 added to CPU 0 at 83
+Process 0 added to CPU queue at 86
+Process 2 added to CPU 0 at 86
+Process 2 terminated at 89
+Process 0 added to CPU 0 at 89
+Process 0 terminated at 92

@@ -486,7 +486,7 @@ public class Window
 		{
 			JPanel panel = new JPanel();
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-			panel.setPreferredSize(new Dimension(25, 25));
+			panel.setPreferredSize(new Dimension(30, 30));
 			cpuQueueSubpanel.add(panel);
 			panel.setLayout(new BorderLayout(0, 0));
 			JLabel label = new JLabel("P" + process.getPID());
@@ -497,7 +497,7 @@ public class Window
 		{
 			JPanel panel = new JPanel();
 			panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-			panel.setPreferredSize(new Dimension(25, 25));
+			panel.setPreferredSize(new Dimension(30, 30));
 			ioQueueSubpanel.add(panel);
 			panel.setLayout(new BorderLayout(0, 0));
 			JLabel label = new JLabel("P" + process.getPID());
