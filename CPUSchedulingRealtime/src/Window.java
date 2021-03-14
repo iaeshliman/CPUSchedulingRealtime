@@ -596,6 +596,7 @@ public class Window
 			setResizable(false);
 			setTitle("Simulation Settings");
 			setBounds(100, 100, 250, 200);
+			setLocationRelativeTo(window);
 			getContentPane().setLayout(new BorderLayout());
 			contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 			getContentPane().add(contentPanel, BorderLayout.CENTER);
