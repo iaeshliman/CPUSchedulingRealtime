@@ -21,8 +21,8 @@ public class CustomProcess
 	private int responseTime;
 	private int cpuWaitTime;
 	private int ioWaitTime;
-	
 	private boolean hasRan;
+	private boolean inIO;
 	
 	// Constructors
 	public CustomProcess(int pid, String name, Queue<Burst> bursts, int priority, int arrivalTime)
@@ -37,16 +37,18 @@ public class CustomProcess
 	}
 	
 	{
-		this.finishTime = -1;
+		this.finishTime = 0;
 		this.turnaroundTime = 0;
 		this.responseTime = 0;
 		this.cpuWaitTime = 0;
 		this.ioWaitTime = 0;	
 		this.hasRan = false;
+		this.inIO = false;
 	}
 	
 	// Getters and Setters
 	public int getPID() { return this.pid; }
+	public String getName() { return this.name; }
 	public int getPriority() { return this.priority; }
 	public State getState() { return this.state; }
 	public int getArrivalTime() { return this.arrivalTime; }
@@ -59,59 +61,92 @@ public class CustomProcess
 	public void setState(State state) { this.state = state; }
 	public void setFinishTime(int time) { this.finishTime = time; }
 	public void setHasRan(boolean hasRan) { this.hasRan = hasRan; }
+	public void setInIO(boolean inIO) { this.inIO = inIO; }
 	
 	// Operations
-	public boolean tick(boolean cpuWait, boolean ioWait, boolean active) // Returns true if burst finished
+	public void tick() // Returns true if burst finished
 	{
-		// Increments values
-		turnaroundTime++;
-		if(!hasRan) responseTime++;
-		if(cpuWait) cpuWaitTime++;
-		if(ioWait) ioWaitTime++;
-		if(active)
+		switch(state)
 		{
-			if(decrementBurst()<=0) // Checks if burst is complete
+		case NEW:
+			finishTime++;
+			break;
+		case READY:
+			if(!hasRan) responseTime++;
+			cpuWaitTime++;
+			turnaroundTime++;
+			finishTime++;
+			break;
+		case RUNNING:
+			tickBurst();
+			turnaroundTime++;
+			finishTime++;
+			break;
+		case WAITING:
+			if(inIO)
 			{
-				finishedBursts.add(remainingBursts.poll()); // Moves from remaining to finished queue
-				return true;
+				tickBurst();
+				turnaroundTime++;
+				finishTime++;
 			}
+			else
+			{
+				ioWaitTime++;
+				turnaroundTime++;
+				finishTime++;
+			}
+			break;
+		case TERMINATED:
+			break;
 		}
-		return false;
 	}
 	
-	public String cpuBursts()
+	public void tickBurst() { if(remainingBursts.peek()!=null) { remainingBursts.peek().decrement(); } }
+	public void finishBurst() { finishedBursts.add(remainingBursts.poll()); }
+	
+	public boolean isEmpty() { return remainingBursts.isEmpty(); }
+	public int peekTime() { return remainingBursts.peek().getRemainingDuration(); }
+	
+	// toString
+	public String cpuRemainingBursts()
 	{
 		String toString = "";
 		for(Burst burst : remainingBursts) if(burst.getType()==DeviceType.CPU) toString+= burst.getTotalDuration() + " ";
 		return toString.trim();
 	}
 	
-	public String ioBursts()
+	public String cpuFinishedBursts()
+	{
+		String toString = "";
+		for(Burst burst : finishedBursts) if(burst.getType()==DeviceType.CPU) toString+= burst.getTotalDuration() + " ";
+		return toString.trim();
+	}
+	
+	public String ioRemainingBursts()
 	{
 		String toString = "";
 		for(Burst burst : remainingBursts) if(burst.getType()==DeviceType.IO) toString+= burst.getTotalDuration() + " ";
 		return toString.trim();
 	}
 	
-	public int decrementBurst() { return remainingBursts.peek().decrement(); }
-	public int peekTime() { return remainingBursts.peek().getRemainingDuration(); }
-	public boolean isEmpty() { return remainingBursts.isEmpty(); }
+	public String ioFinishedBursts()
+	{
+		String toString = "";
+		for(Burst burst : finishedBursts) if(burst.getType()==DeviceType.IO) toString+= burst.getTotalDuration() + " ";
+		return toString.trim();
+	}
 	
-	// toString
+	public String currentBurst()
+	{
+		Burst burst = remainingBursts.peek();
+		if(burst==null) return "";
+		return burst.getRemainingDuration() + "/" + burst.getTotalDuration();
+	}
+	
 	public String toString()
 	{
-		String toString  = "P" + pid + " Arrival Time: " + arrivalTime + "  CPU Bursts: rem(";
-		for(Burst burst : remainingBursts) if(burst.getType()==DeviceType.CPU&&burst!=remainingBursts.peek()) toString += burst.getTotalDuration() + " ";
-		toString += ") - fin(";
-		for(Burst burst : finishedBursts) if(burst.getType()==DeviceType.CPU) toString += burst.getTotalDuration() + " ";
-		toString += ")   IO Bursts: rem(";
-		for(Burst burst : remainingBursts) if(burst.getType()==DeviceType.IO&&burst!=remainingBursts.peek()) toString += burst.getTotalDuration() + " ";
-		toString += ") - fin(";
-		for(Burst burst : finishedBursts) if(burst.getType()==DeviceType.IO) toString += burst.getTotalDuration() + " ";
-		toString += ")   Current Burst: ";
-		Burst curBurst = remainingBursts.peek();
-		if(curBurst!=null) { toString += curBurst.getType() + " " + curBurst.getRemainingDuration() + "/" + curBurst.getTotalDuration(); }
-		toString += "   State: " + state;
-		return toString;
+		return String.format("%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s","P" + pid,name,priority,currentBurst(),
+				"(" + cpuRemainingBursts() + ")","(" + cpuFinishedBursts() + ")","(" + ioRemainingBursts() + ")","(" + ioFinishedBursts() +")",
+				arrivalTime,(responseTime+arrivalTime),finishTime,cpuWaitTime,ioWaitTime,turnaroundTime,state);
 	}
 }

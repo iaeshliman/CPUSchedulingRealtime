@@ -34,45 +34,30 @@ public class Scheduler
 	public Queue<CustomProcess> getQueue() { return this.queue; }
 	
 	// Operations
-	public void tick() { for(Device device : devices) tickDevice(device); }
-	
-	public void tickDevice(Device device)
+	public void tickDevices() { for(Device device : devices) device.tick(); }
+	public void tickQueue()
 	{
-		if(device.tick()) { device.addProcess(queue.poll()); } // If device is empty add the next process in queue
-		else
+		for(Device device : devices)
 		{
-			// Check if device should be preempted based on algorithm
-			if(algorithm==Algorithm.RR)
+			if(device.isEmpty()) device.addProcess(queue.poll());
+			else
 			{
-				if(device.getRunningTime()>=quantum)
-				{ 
-					device.preempt();
-					device.addProcess(queue.poll());
-				}
-			}
-			else if(algorithm==Algorithm.PS)
-			{
-				if(!queue.isEmpty()&&device.getProcess().getPriority()>queue.peek().getPriority())
+				if(algorithm==Algorithm.RR)
 				{
-					device.preempt();
-					device.addProcess(queue.poll());
-				}	
-			}
-		}
-	}
-	
-	public void tickQueue() // Ticks all processes in the queue
-	{
-		for(CustomProcess process : queue)
-		{
-			switch(type)
-			{
-			case CPU:
-				process.tick(true, false, false);
-				break;
-			case IO:
-				process.tick(false, true, false);
-				break;
+					if(device.getRunningTime()>=quantum)
+					{ 
+						device.preempt();
+						device.addProcess(queue.poll());
+					}
+				}
+				else if(algorithm==Algorithm.PS)
+				{
+					if(!queue.isEmpty()&&device.getProcess().getPriority()>queue.peek().getPriority())
+					{
+						device.preempt();
+						device.addProcess(queue.poll());
+					}	
+				}
 			}
 		}
 	}
@@ -96,7 +81,7 @@ public class Scheduler
 		}
 	}
 	
-	public void initialize() { for(Device device : devices) device.addProcess(queue.poll()); }
+	public void initialize() { for(Device device : devices) if(device.isEmpty()) device.addProcess(queue.poll()); }
 	
 	// toString
 	public String toString()

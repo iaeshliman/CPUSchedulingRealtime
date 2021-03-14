@@ -61,15 +61,15 @@ public class Simulation
 	public void tick()
 	{
 		time++;
-		// Adds processes to ready queue at the correct arrival times
+		tickProcesses();
+		cpuScheduler.tickDevices();
+		ioScheduler.tickDevices();
 		addNewProcesses();
-		// Increments the wait times of all processes currently in a queue
 		cpuScheduler.tickQueue();
 		ioScheduler.tickQueue();
-		// Updates simulation one time unit
-		cpuScheduler.tick();
-		ioScheduler.tick();
 	}
+	
+	public void tickProcesses() { for(CustomProcess process : processes) { process.tick(); } }
 	
 	private void addNewProcesses()
 	{
@@ -163,6 +163,8 @@ public class Simulation
 		toString += cpuScheduler + "\n";
 		toString += ioScheduler.getDevice() + "\n";
 		toString += ioScheduler + "\n";
+		toString += String.format("%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s",
+				"PID","Name","Priority","Current","CPU Bursts","Finished","IO Bursts","Finished","Arrival","Start","Finish","CPU Wait","IO Wait","Turnaround","State") + "\n";
 		for(CustomProcess process : processes) toString += process + "\n";
 		toString += "-------------------------";
 		return toString;

@@ -1,11 +1,12 @@
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Queue;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import aeshliman.enumerators.Algorithm;
+import aeshliman.simulation.CustomProcess;
 import aeshliman.simulation.Simulation;
 
 public class SimulationAPI
@@ -14,26 +15,33 @@ public class SimulationAPI
 	private Simulation sim;
 	
 	// Constructors
-	public SimulationAPI()
+	public SimulationAPI(boolean consoleMode)
 	{
-		Algorithm algorithm;
-		int quantum;
-		int cpuCount;
-		int ioCount;
-		while(true)
+		if(consoleMode)
 		{
-			try
+			Algorithm algorithm;
+			int quantum;
+			int cpuCount;
+			int ioCount;
+			while(true)
 			{
-				algorithm = (Algorithm) JOptionPane.showInputDialog(null,"Select algorithm",null,JOptionPane.QUESTION_MESSAGE,null,Algorithm.values(),Algorithm.values()[0]);
-				quantum = Integer.parseInt(JOptionPane.showInputDialog("Please enter quantum time"));
-				cpuCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter cpu count"));
-				ioCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter io count"));
-				break;
+				try
+				{
+					algorithm = (Algorithm) JOptionPane.showInputDialog(null,"Select algorithm",null,JOptionPane.QUESTION_MESSAGE,null,Algorithm.values(),Algorithm.values()[0]);
+					quantum = Integer.parseInt(JOptionPane.showInputDialog("Please enter quantum time"));
+					cpuCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter cpu count"));
+					ioCount = Integer.parseInt(JOptionPane.showInputDialog("Please enter io count"));
+					break;
+				}
+				catch(Exception e) { JOptionPane.showMessageDialog(null, "Invalid Entry");}
 			}
-			catch(Exception e) { JOptionPane.showMessageDialog(null, "Invalid Entry");}
+			sim = new Simulation(algorithm,quantum,cpuCount,ioCount);
+			loadScenario();
 		}
-		sim = new Simulation(algorithm,quantum,cpuCount,ioCount);
-		loadScenario();
+		else
+		{
+			
+		}
 	}
 	
 	// Operations
@@ -66,4 +74,7 @@ public class SimulationAPI
 		if(fc.showDialog(null,"Load Scenario")==JFileChooser.APPROVE_OPTION) { sim.loadScenario(fc.getSelectedFile()); }
 		else sim.appendLog("Failed to load scenario file");
 	}
+	
+	public Queue<CustomProcess> getCPUQueue() { return sim.getCPUScheduler().getQueue(); }
+	public Queue<CustomProcess> getIOQueue() { return sim.getIOScheduler().getQueue(); }
 }

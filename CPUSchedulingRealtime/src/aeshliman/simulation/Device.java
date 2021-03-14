@@ -11,7 +11,6 @@ public class Device
 	private CustomProcess process;
 	private Simulation sim;
 	
-	private int totalTime;
 	private int activeTime;
 	private int runningTime;
 	
@@ -25,7 +24,6 @@ public class Device
 	}
 	
 	{
-		totalTime = 0;
 		activeTime = 0;
 		runningTime = 0;
 	}
@@ -36,6 +34,7 @@ public class Device
 	public int getRunningTime() { return this.runningTime; }
 	
 	// Operations
+	/*
 	public boolean tick()
 	{
 		totalTime++;
@@ -43,7 +42,7 @@ public class Device
 		{
 			activeTime++;
 			runningTime++;
-			if(process.tick(false, false, true)) // Check if process finished burst
+			if(process.tick()) // Check if process finished burst
 			{
 				if(process.isEmpty()) // Check if process finished all bursts
 				{
@@ -58,11 +57,11 @@ public class Device
 					{
 					case CPU:
 						sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + totalTime);
-						sim.getIOScheduler().add(process);
+						sim.getIOScheduler().add(process,false);
 						break;
 					case IO:
 						sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + totalTime);
-						sim.getCPUScheduler().add(process);
+						sim.getCPUScheduler().add(process,false);
 						break;
 					}
 				}
@@ -71,6 +70,42 @@ public class Device
 			}
 		}
 		return process==null; // Return whether device has an active process
+	}
+	*/
+	public void tick()
+	{
+		if(process!=null)
+		{
+			activeTime++;
+			runningTime++;
+			if(process.peekTime()==0)
+			{
+				process.finishBurst();
+				if(process.isEmpty())
+				{
+					process.setState(State.TERMINATED);
+					sim.incrementTerminatedCount();
+					sim.appendLog("Process " + process.getPID() + " terminated at " + sim.getTime());
+				}
+				else
+				{
+					switch(type) // If process has more bursts add it to the correct queue
+					{
+					case CPU:
+						sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + sim.getTime());
+						sim.getIOScheduler().add(process);
+						break;
+					case IO:
+						sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + sim.getTime());
+						sim.getCPUScheduler().add(process);
+						break;
+					}
+				}
+				process.setInIO(false);
+				process = null;
+				runningTime = 0;
+			}
+		}
 	}
 	
 	public void addProcess(CustomProcess newProcess)
@@ -81,13 +116,14 @@ public class Device
 			switch(type) // Updates processes state depending on device type
 			{
 			case CPU:
-				sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + totalTime);
+				sim.appendLog("Process " + process.getPID() + " added to CPU " + id + " at " + sim.getTime());
 				process.setState(State.RUNNING);
 				process.setHasRan(true);
 				break;
 			case IO:
-				sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + totalTime);
+				sim.appendLog("Process " + process.getPID() + " added to IO " + id + " at " + sim.getTime());
 				process.setState(State.WAITING);
+				process.setInIO(true);
 				break;
 			}
 		}
@@ -98,6 +134,7 @@ public class Device
 	{
 		if(this.process!=null)
 		{
+			process.setInIO(false);
 			switch(type)
 			{
 			case CPU:
@@ -109,14 +146,17 @@ public class Device
 				process.setState(State.WAITING);
 				break;
 			}
+			process = null;
 		}
 	}
 	
 	public double calcUtilization()
 	{
-		if(totalTime==0) return 0;
-		return (double)activeTime/totalTime;
+		if(sim.getTime()==0) return 0;
+		return (double)activeTime/sim.getTime();
 	}
+	
+	public boolean isEmpty() { return this.process==null; }
 	
 	// toString
 	public String toString()

@@ -4,7 +4,7 @@ public class Driver
 {
 	public static void main(String[] args)
 	{
-		boolean gui = false;
+		boolean gui = true;
 		if(gui) // GUI mode
 		{
 			EventQueue.invokeLater(new Runnable()
@@ -24,7 +24,7 @@ public class Driver
 		}
 		else // Console mode
 		{
-			SimulationAPI api = new SimulationAPI();
+			SimulationAPI api = new SimulationAPI(true);
 			api.run();
 			api.saveLog();
 		}
